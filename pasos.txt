@@ -1,0 +1,4 @@
+Creamos un nuevo recurso
+- nest g res products --no-spec
+
+- Los entities es una representación de una tabla de la base de datos
