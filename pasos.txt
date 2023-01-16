@@ -1,4 +1,7 @@
 Creamos un nuevo recurso
 - nest g res products --no-spec
 
+Instalamos class-validator y class-transformer para validar los datos que se envian al servidor
+- npm i class-validator class-transformer
+
 - Los entities es una representación de una tabla de la base de datos
