@@ -1,6 +1,12 @@
 import { NotFoundException } from '@nestjs/common';
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -9,55 +15,48 @@ import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductsService {
-
   private readonly logger = new Logger('ProductsService');
-  
+
   constructor(
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
   ) {}
-  
+
   async create(createProductDto: CreateProductDto) {
     try {
-      
       const product = this.productRepository.create(createProductDto);
       await this.productRepository.save(product);
       return product;
-
     } catch (error) {
-
       this.handleDBException(error);
-      
     }
-
-
   }
 
-  findAll() {
-    try {
-      
-      return this.productRepository.find({});
+  findAll(paginationDto: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto;
 
+    try {
+      return this.productRepository.find({
+        take: limit,
+        skip: offset,
+      });
     } catch (error) {
       this.handleDBException(error);
     }
   }
 
   async findOne(id: string) {
-    
     try {
-      const product = await this.productRepository.findOneBy({id});
+      const product = await this.productRepository.findOneBy({ id });
 
-      if(!product) {
+      if (!product) {
         throw new NotFoundException(`Product with id ${id} not found`);
       }
 
       return product;
-
     } catch (error) {
       this.handleDBException(error);
     }
-
   }
 
   update(id: number, updateProductDto: UpdateProductDto) {
@@ -66,24 +65,20 @@ export class ProductsService {
 
   async remove(id: string) {
     try {
-      
       const product = await this.findOne(id);
 
       await this.productRepository.remove(product);
-      
 
       return;
-
     } catch (error) {
       this.handleDBException(error);
     }
   }
 
   private handleDBException(error: any) {
-    if(error.code === '23505') 
-        throw new BadRequestException(error.detail);
+    if (error.code === '23505') throw new BadRequestException(error.detail);
 
-      this.logger.error(error);
-      throw new InternalServerErrorException('Unexpected error, check the logs');
+    this.logger.error(error);
+    throw new InternalServerErrorException('Unexpected error, check the logs');
   }
 }
